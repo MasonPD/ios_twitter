@@ -7,13 +7,17 @@
 //
 
 #import "TimelineVC.h"
+#import "TweetCell.h"
+#import "ComposeViewController.h"
 
 @interface TimelineVC ()
 
 @property (nonatomic, strong) NSMutableArray *tweets;
 
 - (void)onSignOutButton;
+- (void)onComposeButton;
 - (void)reload;
+- (NSString *) timeTransfer:(NSString *)timestamp;
 
 @end
 
@@ -34,8 +38,14 @@
 {
     [super viewDidLoad];
     
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Sign Out" style:UIBarButtonItemStylePlain target:self action:@selector(onSignOutButton)];
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Sign Out" style:UIBarButtonItemStylePlain target:self action:@selector(onSignOutButton)];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Compose" style:UIBarButtonItemStylePlain target:self action:@selector(onComposeButton)];
 
+
+    UINib *tweetsNib = [UINib nibWithNibName:@"TweetCell" bundle:nil];
+    [self.tableView registerNib:tweetsNib forCellReuseIdentifier:@"TweetCell"];
+    
+    self.tableView.rowHeight = 110;
     // Uncomment the following line to preserve selection between presentations.
     // self.clearsSelectionOnViewWillAppear = NO;
  
@@ -63,14 +73,54 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    static NSString *CellIdentifier = @"Cell";
-//    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
-    UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+    static NSString *CellIdentifier = @"TweetCell";
+   TweetCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
+    if (cell == nil){
+        cell = [[TweetCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
+    }
 
     Tweet *tweet = self.tweets[indexPath.row];
-    cell.textLabel.text = tweet.text;
+    //cell.textLabel.text = tweet.text;
+    [cell.tweetContextTextView setText:tweet.text];
+    [cell.userName setText:tweet.username];
+
+    [cell.timeStamp setText:[self timeTransfer:tweet.tweetTimestamp]];
+    NSString *tweetUserHandle = [@"@" stringByAppendingString:tweet.userHandle];
+    [cell.tweetUserHandle setText:tweetUserHandle];
+    
+    NSData * imageData = [NSData dataWithContentsOfURL:tweet.userImageURL];
+    [cell.tweetUserImage setImage:[UIImage imageWithData:imageData]];
     
     return cell;
+}
+
+- (NSString *) timeTransfer:(NSString *)timestamp
+{
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    //NSLocale *usLocale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
+    //[dateFormatter setLocale:usLocale];
+    //[dateFormatter setDateStyle:NSDateFormatterLongStyle];
+    //[dateFormatter setFormatterBehavior:NSDateFormatterBehavior10_4];
+    
+    // see http://unicode.org/reports/tr35/tr35-6.html#Date_Format_Patterns
+    [dateFormatter setDateFormat: @"EEE MMM dd HH:mm:ss +zzzz yyyy"];
+    
+    NSDate *date = [dateFormatter dateFromString:timestamp];
+    
+    NSDate *now = [[NSDate alloc] initWithTimeIntervalSinceNow:0];
+    NSTimeInterval deltaTime = [now timeIntervalSinceDate:date];
+    NSString *deltaTimeString;
+    
+    if (deltaTime < 60) {
+        deltaTimeString = [NSString stringWithFormat:@"%ds",(int) deltaTime];
+    } else if (deltaTime < 3600) {
+        deltaTimeString = [NSString stringWithFormat:@"%dm",(int) (deltaTime/60)];
+    } else if (deltaTime < 3600*48) {
+        deltaTimeString = [NSString stringWithFormat:@"%dh",(int) (deltaTime/3600)];
+    } else {
+        deltaTimeString = [NSString stringWithFormat:@"%dd",(int) (deltaTime/3600/24)];
+    }
+    return deltaTimeString;
 }
 
 /*
@@ -134,6 +184,10 @@
 
 - (void)onSignOutButton {
     [User setCurrentUser:nil];
+}
+
+- (void)onComposeButton{
+    [self.navigationController presentViewController:[[ComposeViewController alloc]init] animated:YES completion:nil];
 }
 
 - (void)reload {
