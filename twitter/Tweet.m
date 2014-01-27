@@ -10,6 +10,10 @@
 
 @implementation Tweet
 
+- (NSString *) tweetId{
+    return [self.data valueOrNilForKeyPath:@"id_str"];
+}
+
 - (NSString *)text {
     return [self.data valueOrNilForKeyPath:@"text"];
 }
@@ -28,6 +32,16 @@
 
 - (NSString *) tweetTimestamp{
     return [self.data valueOrNilForKeyPath:@"created_at"];
+}
+
+- (NSString *)numberOfRetweets {
+    NSString *stringRetweets = [NSString stringWithFormat:@"%@", [self.data valueOrNilForKeyPath:@"retweet_count"]];
+    return stringRetweets;
+}
+
+- (NSString *)numberOfFavorites {
+    NSString *stringFavorites = [NSString stringWithFormat:@"%@", [self.data valueOrNilForKeyPath:@"favorite_count"]];
+    return stringFavorites;
 }
 
 + (NSMutableArray *)tweetsWithArray:(NSArray *)array {

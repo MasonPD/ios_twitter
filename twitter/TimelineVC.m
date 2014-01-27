@@ -9,6 +9,7 @@
 #import "TimelineVC.h"
 #import "TweetCell.h"
 #import "ComposeViewController.h"
+#import "TweetDetailsViewController.h"
 
 @interface TimelineVC ()
 
@@ -45,7 +46,7 @@
     UINib *tweetsNib = [UINib nibWithNibName:@"TweetCell" bundle:nil];
     [self.tableView registerNib:tweetsNib forCellReuseIdentifier:@"TweetCell"];
     
-    self.tableView.rowHeight = 110;
+    self.tableView.rowHeight = 90;
     // Uncomment the following line to preserve selection between presentations.
     // self.clearsSelectionOnViewWillAppear = NO;
  
@@ -81,15 +82,15 @@
 
     Tweet *tweet = self.tweets[indexPath.row];
     //cell.textLabel.text = tweet.text;
-    [cell.tweetContextTextView setText:tweet.text];
-    [cell.userName setText:tweet.username];
+    [cell.tweetContentTextView setText:tweet.text];
+    [cell.tweetUsernameLabel setText:tweet.username];
 
-    [cell.timeStamp setText:[self timeTransfer:tweet.tweetTimestamp]];
+    [cell.tweetTimestampLabel setText:[self timeTransfer:tweet.tweetTimestamp]];
     NSString *tweetUserHandle = [@"@" stringByAppendingString:tweet.userHandle];
     [cell.tweetUserHandle setText:tweetUserHandle];
     
     NSData * imageData = [NSData dataWithContentsOfURL:tweet.userImageURL];
-    [cell.tweetUserImage setImage:[UIImage imageWithData:imageData]];
+    [cell.tweetUserProfileImage setImage:[UIImage imageWithData:imageData]];
     
     return cell;
 }
@@ -165,6 +166,10 @@
 #pragma mark - Table view delegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    Tweet *selectedTweet = self.tweets[indexPath.row];
+    TweetDetailsViewController *tdvc = [[TweetDetailsViewController alloc]init];
+    tdvc.selectedTweet = selectedTweet;
+    [self.navigationController pushViewController:tdvc animated:YES];
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
